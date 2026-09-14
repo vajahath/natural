@@ -1,78 +1,90 @@
-# Natural — Society Simulation: Plan & Principles
+# Natural — Society Simulation: Plan & Principles (v2)
 
-**One line:** A modern-day city/economy sim where families, businesses and banks make their own
-decisions. The player is the government: builds infrastructure, sets taxes and policy, and wins by
-raising income for *every* class of citizen.
+**One line:** A modern-day city/economy sim where families, institutions and the bank make their
+own decisions. The player is the government: owns all land and institutions, builds new ones,
+answers land requests, sets taxes and policy, and is scored on real GDP per person.
+
+**Time:** 1 tick = 1 week. 52 ticks = 1 year. Charts aggregate by month and year.
 
 ---
 
 ## 1. Core principles (the constitution)
 
-1. **Families are the atom.** Every family wants one thing: a better lifestyle. Everything else emerges.
-2. **Entities decide, the player enables.** Families, businesses and banks act on simple local rules.
-   The player never upgrades a house or a shop. The player only creates conditions: land, roads,
-   power, water, schools, tax, subsidies, interest rate.
-3. **Money is conserved, except at banks and government.** Spending never destroys money; it moves
-   it. Only bank lending creates money and only loan repayment destroys it (see §4).
-4. **Every good has a chain.** Resource → producer → transport → market → family. A broken link
-   (no road, no power, no workers) shows up as shortage, price rise, and unhappy families.
-5. **Prices come from supply and demand.** No fixed prices. Scarcity raises price, which attracts
-   new producers, which lowers price. This is the main self-balancing force.
-6. **Growth needs capital and demand.** A business expands only when it is profitable *and* can get
-   money (savings or loan). A family upgrades only when it can afford the new spend level.
-7. **Progress lifts costs.** Each family level earns more and spends more. Growth must keep outrunning
-   cost, or families slide back. This is the tension that makes it a game.
-8. **The player is judged on the whole distribution, not the average.** Score = income growth of the
-   poorest class, the middle, and the top, plus per-person income. A rich city with a poor class fails.
-9. **No micromanagement.** If a mechanic needs the player to click on an individual family or shop, it
-   is the wrong mechanic.
-10. **Teach by showing.** Every number the player sees should map to a real economic idea
-    (GDP, inflation, unemployment, credit, tax base, budget deficit).
+1. **Families are the atom.** Every family wants a better lifestyle. Everything else emerges.
+2. **Entities decide, the player enables.** Institutions upgrade themselves, families upgrade
+   their homes, the bank decides whom to lend to. The player never clicks on an individual.
+3. **Nobody takes land. Everyone requests it.** Land is the player's main lever for city planning.
+4. **Money is conserved, except at the bank and the treasury.** Spending never destroys money; it
+   moves it. Only bank lending creates money and only repayment destroys it (see §4).
+5. **Every good has a chain.** Resource → producer → market → family. A broken link (no road, no
+   power, no workers, no land) shows up as shortage, price rise, and unhappy families.
+6. **Prices come from supply and demand.** Scarcity raises price. Price is the signal the
+   *player* reads to decide where to build or grant land.
+7. **Growth needs capital and demand.** Nothing upgrades without retained money, and most
+   upgrades need a loan with a weekly EMI. That drag keeps growth slow and realistic.
+8. **Progress lifts costs.** Each family level earns more and spends more. Growth must keep
+   outrunning cost, or families slide back.
+9. **Score = real GDP per person**, with failure states so a rich average can't hide a starving
+   class (§5).
+10. **Teach by showing.** Every dashboard number maps to a real idea: GDP, inflation,
+    unemployment, credit, tax base, deficit.
 
 ---
 
-## 2. Entities and their decision rules
+## 2. Ownership and entities
 
-| Entity | Wants | Decides on its own | Player influence |
+| Entity | Owns | Wants | Decides on its own |
 |---|---|---|---|
-| **Family** | Higher lifestyle level, happiness | Where to work, what to buy, when to upgrade home, when to borrow, when to start a business | Taxes, schools, housing zones, transport |
-| **Business** | Profit | Hire/fire, raise/lower price, expand, borrow, close | Zones, roads, power, corporate tax, subsidies |
-| **Bank** | Interest income, low defaults | Lend or refuse, set rate = base rate + risk | Base interest rate, reserve ratio |
-| **Government (player)** | Score | — | Build infra, set taxes, subsidies, borrow, set base rate |
+| **Government (player)** | All land, infra, institutions, the bank | Score | — |
+| **Institution** | Its own account | Retained earnings, growth | Price, wage, hire/fire, upgrade, request land, remit surplus |
+| **Family** | Savings; its home plot once bought | Higher level, happiness | Job, retraining, spending, upgrade, buy land, leave |
+| **Bank** | Its reserves | Interest, low defaults | Lend or refuse, rate = base + risk |
 
-### Family
-- Levels **L1–L5** (e.g. Basic → Modest → Comfortable → Affluent → Wealthy).
-- Each level has a **needs basket** (food, housing, energy, goods, services, transport) and a **cost**.
-- Income = wages from jobs (one or two workers per family) + business profit if they own one.
-- **Upgrade rule:** savings ≥ down-payment for next level AND expected income ≥ 1.3 × next level cost.
-  Remainder is a bank mortgage. **Downgrade rule:** missed basket for N ticks, or default.
-- **Job rule:** takes the best-paying reachable job (reachable = transport time under a limit).
-- **Entrepreneur rule:** if a good is in shortage nearby and the family has savings, it may open a
-  business (probability scales with education level).
-- **Happiness** = basket satisfied + commute short + services nearby. Low happiness → emigrate.
-  High happiness → immigration (new families arrive). This is population growth.
+**No private institutions.** Institutions are autonomous state enterprises with their own
+accounts. Families earn wages only (plus deposit interest); they never own institutions.
 
-### Business
-- Types by sector: **primary** (farm, fishing, logging, mining, coal), **secondary** (mill, factory,
-  power plant, food processing), **tertiary** (shop, clinic, school, transport, bank).
-- Needs: land with the resource (primary), inputs (secondary), workers, power, road access.
-- Each tick: produce → sell at market price → pay wages, inputs, tax → keep profit.
-- **Expand rule:** profit margin > X for N ticks and workers available → add capacity (self-funded or
-  loan). **Shrink/close rule:** losses for N ticks.
-- **Price rule:** inventory piling up → lower price; sold out → raise price.
-- **Wage rule:** cannot fill jobs → raise wage; too many applicants → hold wage.
+### Institutions
+Types: farm, dairy farm, fishery, fish market, logging camp, sawmill, mine, refinery, coal plant,
+solar farm, hydro plant, nuclear plant, market (retail), school, hospital.
+
+Per tick: produce (needs workers, inputs, power, road) → sell to market → pay wages → retain.
+Rules:
+- **Price:** inventory piling up → lower; sold out → raise.
+- **Wage:** jobs unfilled → raise; too many applicants → hold.
+- **Upgrade:** retained earnings ≥ upgrade cost AND level < cap → upgrade. Output scales with level.
+- **Land:** at cap, file a land request with money attached and stop growing.
+- **Surplus:** balance above a reserve (wages + next upgrade) is remitted to the treasury.
+
+### Families
+- Home levels **L1–L4 on one plot**, higher with more land. Basket (food, energy, goods, services)
+  and its cost rise with level.
+- **Renters:** new arrivals live in government housing at L1 and pay rent to the treasury. They
+  cannot level up until they buy a plot.
+- **Buying land:** savings ≥ down payment → file a land request. Player places it. Remainder is
+  a mortgage with weekly EMI.
+- **Job:** best-paying reachable job. Each worker has a **skill per sector**; a new sector starts
+  at 30% productivity and reaches 100% over ~26 weeks, so people switch domain slowly and only
+  when pushed by wages or unemployment.
+- **Upgrade:** savings ≥ down payment AND income ≥ 1.3 × next basket + EMI. **Downgrade:** missed
+  basket for 8 weeks. **Default:** missed EMI for 8 weeks → loan written off, level reset.
+- **Happiness** = basket satisfied + employed. High → immigration (arrivals are renters with no
+  savings). Low → emigration.
+
+### Land and level cap
+- Grid of plots. Every plot starts government-owned. Player sets the land price.
+- **Max level = 4 × land units.** 1 plot → L1–L4, 2 plots → L8, and so on. Applies to
+  institutions and homes.
+- A land request = who, what for, money offered. It sits in a queue until the player picks a plot.
+  Money goes to the treasury on grant.
+
+### Market
+The only place families spend. One price per good, from supply and demand. The market is an
+institution: buys wholesale from producers, sells retail with a margin.
 
 ### Bank
-- Holds family and business deposits.
-- **Lends by creating a deposit** (money creation). Loan limit = reserve ratio × deposits.
-- Interest = base rate (player) + risk premium (borrower's income vs. loan size).
-- Default → bank loses, borrower downgrades. Too many defaults → bank stops lending → credit crunch.
-
-### Government (player)
-- **Income:** income tax, corporate tax, sales tax, land sale, government bonds (borrow from banks).
-- **Spend:** infrastructure (roads, rail, port, power plants, water, schools, hospitals), subsidies,
-  interest on debt, maintenance.
-- **Policy dials:** tax rates, base interest rate, reserve ratio, subsidy per sector, immigration cap.
+One government-run bank. Lends to families (land, home) and institutions (expansion).
+Lending capacity = deposits ÷ reserve ratio. Rate = base rate (player) + risk premium.
+Too many defaults → bank stops lending → credit crunch.
 
 ---
 
@@ -80,118 +92,82 @@ raising income for *every* class of citizen.
 
 | Layer | Items |
 |---|---|
-| Natural resources (map tiles) | Farmland, forest, fish, ore, coal, river/wind/sun (for power) |
+| Natural resources (map) | Farmland, forest, fish, ore, coal, river/wind/sun |
 | Goods | Food, wood, ore, coal, electricity, consumer goods, services |
-| Infrastructure (player builds) | Road, rail, port, power plant (coal / solar / hydro / nuclear), grid line, water, school, hospital, residential/commercial/industrial zone |
-| Upgrades (entities do) | House level, business capacity, machinery (raises output per worker) |
+| Player builds | Institutions, roads, rail, port, grid, water, school, hospital |
+| Entities upgrade | Institution level, home level |
 
-Infrastructure only enables; it earns nothing directly. A road makes jobs reachable and goods flow.
-A school raises education → higher productivity and more entrepreneurs. Power is a required input
-for secondary/tertiary businesses and for L3+ homes.
+Building consumes **wood from the market** and pays **labour to families**, so construction is
+itself part of the economy and stalls if there is no wood.
 
 ---
 
-## 4. Where money comes from and where it goes
+## 4. Money FAQ
 
-This is the part most games fake. Keep it honest and simple:
+**Does selling a natural resource create money?** No. It creates *wealth*. A caught fish is new
+value; selling it moves *existing* money from buyer to seller. If nobody has money the fish rots.
+That gap is why credit exists.
 
-**Money is created when**
-1. A **bank issues a loan** — it credits the borrower's account with new money. This is the main
-   source, exactly as in the real world.
-2. The **government spends more than it taxes** (deficit) and finances it with bonds bought by banks.
+| Source | Creates money? | In game |
+|---|---|---|
+| Bank loan | Yes | Bank credits borrower. Destroyed as principal is repaid. |
+| Government deficit | Yes | Treasury spends more than it taxes; balance goes negative. |
+| Initial seed | Once | Starting treasury + savings. |
+| Selling goods, wages, tax, rent, EMI | No | Transfers. |
+| Emigration | Removes | Leaver takes savings out. |
 
-**Money is destroyed when**
-1. A **loan principal is repaid** (interest stays as bank income and keeps circulating).
-2. The government **runs a surplus and retires debt**.
+Not in v0 but possible later: exports (money in), imports (money out), foreign investment.
 
-**Money only moves (never disappears) when**
-- A family buys food → money goes to the shop → to the farmer → to their workers → back to shops.
-- Taxes are paid → money goes to the treasury → spent on infrastructure → to construction workers.
-- Wages, rent, interest, subsidies.
+**Consequences to simulate (the teaching moments)**
+- More loans or deficit, same goods → **inflation**.
+- Loans that fund new production → more goods → **real growth**, stable prices.
+- Bank refuses to lend → no upgrades → **stagnation**.
+- High tax → savings shrink → fewer upgrades. Low tax → no budget → bottlenecks.
 
-**Real value is created when** goods are produced (a fish caught, power generated). **Real value is
-consumed when** families eat, use power, wear out goods. Consumption removes the *good*, not the
-money. So the player's assumption "food eaten = money gone" should be: food eaten = good gone,
-money now sits with the food seller.
+**Invariant asserted every tick:**
+`Σ all balances (treasury may be negative) = seed + Σ loans outstanding + net external flow`.
 
-**Consequences to simulate (these are the teaching moments)**
-- More loans → more money chasing same goods → **inflation** if production doesn't grow.
-- Loans funding new production → more goods → **real growth**, stable prices.
-- Bank refuses to lend → businesses can't expand → **stagnation**, unemployment.
-- High tax → treasury grows but families' savings shrink → fewer upgrades, fewer businesses.
-- Low tax → no infrastructure budget → bottlenecks (no roads, no power) → growth stalls.
-
-**GDP** (shown to player) = total value of goods and services produced per tick.
-**Per-person income** = total wages + profits ÷ population.
+**GDP** = value of goods produced per tick at market prices. **Real GDP** = GDP ÷ price index.
+**Score** = real GDP ÷ population.
 
 ---
 
 ## 5. The gameplay loop
 
-**Simulation tick (e.g. 1 tick = 1 month):**
-1. Businesses produce, using resources, inputs, workers, power.
-2. Markets clear: prices adjust, goods move along transport to buyers.
-3. Families earn, pay tax, buy basket, save the rest.
-4. Families and businesses run their decision rules (upgrade, borrow, hire, open, close, move).
-5. Banks process loans, interest, defaults.
-6. Treasury updates; player budget available.
+**Simulation tick (1 week):**
+1. Apply player actions (build, grant land, dials).
+2. Institutions buy inputs and produce.
+3. Producers sell to market; market sells to families; prices adjust.
+4. Wages paid, tax and rent to treasury, EMI to bank.
+5. Entities decide: upgrade, request land, hire, retrain, move, leave.
+6. Bank processes loans and defaults; treasury updates.
 7. Stats and score refresh.
 
-**Player loop (every few ticks):**
-- **Observe:** Which class is falling behind? What is in shortage? Where is unemployment?
-- **Diagnose:** Missing road? No power? No workers (housing)? No capital (bank tight)? Tax too high?
-- **Act:** Build infrastructure, zone land, adjust a dial.
-- **Wait and see:** Entities respond over the next ticks. Score moves.
+**Player loop (every few weeks):**
+- **Observe:** which good is expensive, which class is falling behind, who is unemployed?
+- **Diagnose:** no land? no road? no wood for building? no power? bank tight? tax too high?
+- **Act:** grant a land request, build an institution or road, move a dial.
+- **Wait and see:** chain reaction over the next ~10 weeks.
 
-The loop works if every player action produces a *visible* chain reaction within ~10 ticks, and if
-neglect produces a visible decline. That is the first thing the prototype must prove.
+The loop works if every action produces a visible chain reaction within ~10 ticks and neglect
+produces a visible decline. That is the first thing the prototype must prove.
 
-**Win/score:** Rolling 5-year growth of income for each of 3 classes (bottom / middle / top), per-person
-income, and no class below the basic basket. Failure states: bankrupt treasury, mass emigration,
-runaway inflation.
-
----
-
-## 6. Prototype plan (v0 → v2)
-
-Goal of v0 is **not graphics**. It is to see whether the numbers produce a loop.
-
-### v0 — Headless economy (1–2 weeks)
-- Tick engine, ~50 families, 3 goods (food, wood, power), 2 sectors, 1 bank, 1 treasury.
-- Rules from §2 as plain functions. Prices via simple supply/demand.
-- Web dashboard: tables + line charts (GDP, money supply, prices, class incomes, treasury).
-- Player actions: build road (unlocks a resource tile), build power plant, set income tax %,
-  set base interest rate.
-- **Exit criterion:** running 200 ticks with *no* player input stagnates; with sensible inputs it
-  grows; with bad inputs it collapses. If all three don't happen, tune rules before adding anything.
-
-### v1 — Space (2–3 weeks)
-- Small tile grid; distance matters for jobs and goods.
-- Zones, roads, rail, multiple resource types, family levels visible as house tiles.
-- Business self-expansion visible.
-
-### v2 — Full policy set
-- All taxes, subsidies, bonds, reserve ratio, immigration, education, happiness, multiple banks.
-
-**Tech (proposed):** TypeScript, simulation as a pure library (no rendering dependency), Vitest
-tests for economic invariants (money conservation, no negative stock), Vite + a lightweight UI for
-the dashboard. Rendering engine decision deferred to v1.
+**Score:** real GDP per person, rolling yearly growth.
+**Fail:** any class below the basic basket for 26 weeks; inflation above threshold for 52 weeks;
+mass emigration.
 
 ---
 
-## 7. Tuning knobs and invariants to test
+## 6. Prototype plan
 
-- **Invariant:** Σ money across all accounts = Σ loans outstanding + government deficit. Assert every tick.
-- **Invariant:** no good is consumed that was not produced or imported.
-- **Knobs to expose in a debug panel:** upgrade threshold multiplier, price elasticity, wage
-  stickiness, reserve ratio, loan risk premium, basket cost per level.
+The engine is a pure library. Any UI (web, CLI, later a game engine) talks to it only through
+`createWorld`, `step(state, actions)`, and read-only selectors. State is plain JSON.
 
----
+| Stage | Scope | Done when |
+|---|---|---|
+| **v0 engine + CLI** | 20×20 grid, ~50 families, food/wood/power, farm + logging + coal plant + market + bank | 10-year runs: idle stagnates, sensible grows, bad collapses. Tests green. |
+| **v0 dashboard** | Grid, charts, land-request queue with plot picker, dials, play/pause | A person can play the loop in §5 |
+| **v1** | More goods and institution types, services, schools, happiness depth | — |
+| **v2** | Full policy set: subsidies, bonds, reserve ratio, immigration cap, zones | — |
 
-## 8. Open questions (decide during v0)
-
-1. Is there an "outside world" (imports/exports) or is the economy closed? Closed is simpler for v0.
-2. Does the player set interest rates (central bank) or only banks? Proposal: player sets base rate.
-3. How much land does the player give away vs. sell? Selling land is a treasury income source.
-4. Tick length: month is a good balance of speed and readability.
-5. How many classes to track: 3 (bottom/middle/top thirds) is enough to teach inequality.
+Tuning knobs live in one config object and are exposed in a debug panel.

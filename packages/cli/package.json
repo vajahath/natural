@@ -1,0 +1,12 @@
+{
+  "name": "@natural/cli",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "sim": "tsx src/run.ts"
+  },
+  "dependencies": {
+    "@natural/engine": "*"
+  }
+}
