@@ -112,11 +112,20 @@ $("#btn-play").onclick = () => setPlaying(!playing);
   if (playing) setPlaying(true);
 };
 $("#btn-save").onclick = () => {
-  localStorage.setItem(SAVE_KEY, JSON.stringify(world));
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify(world));
+  } catch {
+    alert("Saving is not available in this browser context.");
+  }
   render();
 };
 $("#btn-load").onclick = () => {
-  const raw = localStorage.getItem(SAVE_KEY);
+  let raw: string | null = null;
+  try {
+    raw = localStorage.getItem(SAVE_KEY);
+  } catch {
+    raw = null;
+  }
   if (raw) {
     world = JSON.parse(raw) as WorldState;
     pending = [];
