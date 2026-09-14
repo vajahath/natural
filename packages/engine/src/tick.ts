@@ -28,6 +28,8 @@ export function step(input: WorldState, actions: readonly Action[] = []): StepRe
   for (const g of GOODS) {
     state.market.lastDemand[g] = state.market.demand[g];
     state.market.demand[g] = 0;
+    state.market.lastWanted[g] = state.market.wanted[g];
+    state.market.wanted[g] = 0;
     state.market.lastSold[g] = 0;
     state.market.lastBought[g] = 0;
     state.market.lastOffered[g] = 0;

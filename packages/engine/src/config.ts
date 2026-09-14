@@ -104,6 +104,8 @@ export interface Config {
   };
   /** Max public/construction labour paid to one unemployed family per payment; the rest is spread over everyone. */
   laborCapPerFamily: number;
+  /** Labour money one construction worker delivers per week on government projects. */
+  constructionRatePerWorker: number;
   /** Units a market can sell per week per level; it upgrades when throughput nears this. */
   marketCapacityPerLevel: number;
 }
@@ -113,8 +115,8 @@ export const defaultConfig: Config = {
   basePrices: { food: 8, wood: 8, power: 5 },
   institutions: {
     farm: { produces: "food", resource: "farmland", baseOutput: 40, jobsPerLevel: 6, powerPerLevel: 2, buildWood: 40, buildLabor: 900, upgradeCost: 800, initialWage: 30 },
-    logging: { produces: "wood", resource: "forest", baseOutput: 30, jobsPerLevel: 5, powerPerLevel: 1, buildWood: 20, buildLabor: 700, upgradeCost: 700, initialWage: 30 },
-    coalPlant: { produces: "power", resource: "coal", baseOutput: 30, jobsPerLevel: 3, powerPerLevel: 0, buildWood: 80, buildLabor: 2000, upgradeCost: 1500, initialWage: 32 },
+    logging: { produces: "wood", resource: "forest", baseOutput: 30, jobsPerLevel: 5, powerPerLevel: 1, buildWood: 0, buildLabor: 700, upgradeCost: 700, initialWage: 30 },
+    coalPlant: { produces: "power", resource: "coal", baseOutput: 30, jobsPerLevel: 3, powerPerLevel: 0, buildWood: 40, buildLabor: 1500, upgradeCost: 1500, initialWage: 32 },
     market: { produces: null, resource: "none", baseOutput: 0, jobsPerLevel: 2, powerPerLevel: 1, buildWood: 30, buildLabor: 800, upgradeCost: 600, initialWage: 30 },
   },
   minUtilization: 0.15,
@@ -163,6 +165,7 @@ export const defaultConfig: Config = {
     publicWage: 24,
   },
   laborCapPerFamily: 40,
+  constructionRatePerWorker: 80,
   marketCapacityPerLevel: 150,
 };
 

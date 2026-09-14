@@ -52,3 +52,16 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .build-row { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
 .help { color: var(--muted); font-size: 11px; line-height: 1.4; }
 @media (max-width: 900px) { #app { grid-template-columns: 1fr; grid-template-rows: auto auto auto; } aside { border-left: none; border-top: 1px solid var(--line); } }
+
+/* tooltips, tutorial, scenario chooser */
+#tip { position: fixed; z-index: 50; max-width: 280px; background: #1f2328; color: #fff; padding: 7px 9px; border-radius: 6px; font-size: 12px; line-height: 1.4; pointer-events: none; box-shadow: 0 4px 14px rgba(0,0,0,0.2); }
+[data-tip] { cursor: help; }
+.tutorial { background: #eef4ff; border: 1px solid #c7d7fb; border-radius: 8px; padding: 10px 12px; }
+.tutorial h3 { margin: 0 0 4px; font-size: 13px; display: flex; justify-content: space-between; }
+.tutorial h3 small { color: var(--muted); font-weight: 500; }
+.tutorial p { margin: 4px 0 8px; line-height: 1.45; }
+.tutorial .done { color: var(--good); font-weight: 600; }
+.tutorial .todo { color: var(--warn); font-weight: 600; }
+.tutorial .row { display: flex; gap: 6px; flex-wrap: wrap; }
+.scenarios { display: flex; gap: 6px; }
+.help b { color: var(--ink); }

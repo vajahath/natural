@@ -106,6 +106,7 @@ export function consume(state: WorldState, events: GameEvent[]): void {
       const unit = state.market.prices[g] * (1 + salesTax);
       const affordable = unit > 0 ? fam.savings / unit : want;
       state.market.demand[g] += Math.min(want, affordable); // effective demand: wants backed by money
+      state.market.wanted[g] += want;
       const qty = Math.max(0, Math.min(want, state.market.inventory[g], affordable));
       const cost = qty * unit;
       fam.savings -= cost;

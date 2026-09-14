@@ -50,13 +50,13 @@ export function planProduction(state: WorldState): void {
   const producers = Object.values(state.institutions).filter((i) => cfg.institutions[i.type].produces !== null);
   for (const inst of producers) {
     const spec = cfg.institutions[inst.type];
-    capacity[spec.produces as Good] += spec.baseOutput * inst.level * averageSkill(state, inst);
+    capacity[spec.produces as Good] += spec.baseOutput * inst.level * averageSkill(state, inst) * inst.lastFactor;
   }
   for (const g of GOODS) {
     if (capacity[g] <= 0) continue;
-    let desired = state.market.lastDemand[g];
+    let desired = Math.max(state.market.lastDemand[g], state.market.lastWanted[g]);
     if (cfg.spoilage[g] === 0) {
-      const target = state.market.lastDemand[g] * cfg.market.stockWeeks + 30;
+      const target = desired * cfg.market.stockWeeks + 30;
       desired += Math.max(0, target - state.market.inventory[g]) * 0.25;
     }
     const minUtil = cfg.minUtilization;
@@ -86,15 +86,18 @@ export function produceAndSell(state: WorldState, events: GameEvent[]): number {
     const spec = cfg.institutions[inst.type];
     const good = spec.produces as Good;
     let factor = crewProductivity(state, inst);
+    let constraint = 1;
     const powerNeed = spec.powerPerLevel * inst.level;
     if (powerNeed > 0) {
       const got = buyFromMarket(state, inst, "power", powerNeed);
       state.market.demand.power += powerNeed;
-      factor *= 0.3 + 0.7 * (got / powerNeed);
+      state.market.wanted.power += powerNeed;
+      constraint *= 0.3 + 0.7 * (got / powerNeed);
     }
     // Each plot without a road contributes at reduced output.
-    const roadFactor = inst.plotIds.reduce((sum, pid) => sum + (state.plots[pid]?.road ? 1 : cfg.roadlessOutputFactor), 0) / Math.max(1, inst.plotIds.length);
-    factor *= roadFactor;
+    constraint *= inst.plotIds.reduce((sum, pid) => sum + (state.plots[pid]?.road ? 1 : cfg.roadlessOutputFactor), 0) / Math.max(1, inst.plotIds.length);
+    inst.lastFactor = constraint;
+    factor *= constraint;
     const output = spec.baseOutput * inst.level * factor;
     inst.lastOutput = output;
     gdp += output * state.market.prices[good];
@@ -105,9 +108,10 @@ export function produceAndSell(state: WorldState, events: GameEvent[]): number {
     const wholesale = state.market.prices[good] * (1 - cfg.market.margin);
     let cap = output;
     if (cfg.spoilage[good] > 0) {
-      cap = Math.min(cap, Math.max(0, state.market.lastDemand[good] * cfg.market.perishableBuyFactor - state.market.inventory[good]));
+      const need = Math.max(state.market.lastDemand[good], state.market.lastWanted[good]);
+      cap = Math.min(cap, Math.max(0, need * cfg.market.perishableBuyFactor - state.market.inventory[good]));
     } else {
-      const target = state.market.lastDemand[good] * cfg.market.stockWeeks + 30;
+      const target = Math.max(state.market.lastDemand[good], state.market.lastWanted[good]) * cfg.market.stockWeeks + 30;
       cap = Math.min(cap, Math.max(0, target - state.market.inventory[good]));
     }
     const affordable = wholesale > 0 ? market.balance / wholesale : cap;
@@ -131,6 +135,7 @@ export function produceAndSell(state: WorldState, events: GameEvent[]): number {
 export function clearMarket(state: WorldState): void {
   const cfg = state.config.market;
   state.market.demand.wood += state.market.constructionWood;
+  state.market.wanted.wood += state.market.constructionWood;
   for (const g of GOODS) {
     const demand = state.market.demand[g];
     const sold = state.market.lastSold[g];

@@ -64,6 +64,8 @@ export interface Institution {
   loanIds: number[];
   requestId: number | null;
   lastOutput: number;
+  /** Combined power and road factor applied to last week's output (1 = no constraint). */
+  lastFactor: number;
   lastRevenue: number;
   lastWageBill: number;
   /** Ticks in a row the institution could not pay full wages. */
@@ -107,8 +109,11 @@ export interface Market {
   institutionId: number;
   prices: Record<Good, number>;
   inventory: Record<Good, number>;
-  /** Demand accumulating during the current tick. */
+  /** Money-backed demand accumulating during the current tick (drives prices). */
   demand: Record<Good, number>;
+  /** Full needs accumulating during the current tick, affordable or not (drives production plans). */
+  wanted: Record<Good, number>;
+  lastWanted: Record<Good, number>;
   /** Demand seen over the whole previous tick (used to decide how much perishable stock to buy). */
   lastDemand: Record<Good, number>;
   /** Units producers offered this tick (plus carried stock). */
@@ -139,7 +144,8 @@ export interface Project {
   woodNeeded: number;
   woodDelivered: number;
   laborCost: number;
-  laborPaid: boolean;
+  /** Labour money paid out so far. Paid week by week at the construction rate. */
+  laborPaid: number;
 }
 
 export interface TickStats {

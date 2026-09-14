@@ -26,7 +26,7 @@ export function applyAction(state: WorldState, action: Action, events: GameEvent
     case "buildRoad": {
       const plot = state.plots[action.plotId];
       if (!plot || plot.road) return;
-      state.projects.push({ id: newId(state), kind: "road", plotId: action.plotId, woodNeeded: state.config.road.wood, woodDelivered: 0, laborCost: state.config.road.labor, laborPaid: false });
+      state.projects.push({ id: newId(state), kind: "road", plotId: action.plotId, woodNeeded: state.config.road.wood, woodDelivered: 0, laborCost: state.config.road.labor, laborPaid: 0 });
       return;
     }
     case "buildInstitution": {
@@ -34,7 +34,7 @@ export function applyAction(state: WorldState, action: Action, events: GameEvent
       const spec = state.config.institutions[action.institutionType];
       if (!plot || !isFree(state, action.plotId)) return emit(events, state, "rejected", `Plot ${action.plotId} is not free`);
       if (spec.resource !== "none" && plot.resource !== spec.resource) return emit(events, state, "rejected", `${action.institutionType} needs ${spec.resource}`);
-      state.projects.push({ id: newId(state), kind: "institution", institutionType: action.institutionType, plotId: action.plotId, woodNeeded: spec.buildWood, woodDelivered: 0, laborCost: spec.buildLabor, laborPaid: false });
+      state.projects.push({ id: newId(state), kind: "institution", institutionType: action.institutionType, plotId: action.plotId, woodNeeded: spec.buildWood, woodDelivered: 0, laborCost: spec.buildLabor, laborPaid: 0 });
       return;
     }
     case "rejectLand": {
@@ -93,19 +93,29 @@ function clearRequest(state: WorldState, owner: { kind: "family" | "institution"
   }
 }
 
-/** Government projects consume wood as it becomes available, then pay labour and complete. */
+/**
+ * Government projects consume wood as it becomes available and labour week by week: the
+ * town's public workers build, so a small town builds slowly. Complete when both are done.
+ */
 export function advanceProjects(state: WorldState, events: GameEvent[]): void {
   const treasury = { get: () => Number.POSITIVE_INFINITY, add: (d: number) => (state.treasury.balance += d) };
+  let crew = 0;
+  for (const f of Object.values(state.families)) for (const w of f.workers) if (w.jobId === null) crew++;
+  let laborBudget = Math.max(2, crew) * state.config.constructionRatePerWorker;
   const remaining = [];
   for (const p of state.projects) {
     const need = p.woodNeeded - p.woodDelivered;
     const step = Math.min(need, state.market.inventory.wood);
     if (step > 0 && tryConstruct(state, treasury, step, 0)) p.woodDelivered += step;
-    if (p.woodDelivered + 1e-9 < p.woodNeeded) {
+    const labor = Math.min(p.laborCost - p.laborPaid, laborBudget);
+    if (labor > 0 && tryConstruct(state, treasury, 0, labor)) {
+      p.laborPaid += labor;
+      laborBudget -= labor;
+    }
+    if (p.woodDelivered + 1e-9 < p.woodNeeded || p.laborPaid + 1e-9 < p.laborCost) {
       remaining.push(p);
       continue;
     }
-    tryConstruct(state, treasury, 0, p.laborCost);
     const plot = state.plots[p.plotId]!;
     if (p.kind === "road") {
       plot.road = true;

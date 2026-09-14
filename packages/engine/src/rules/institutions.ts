@@ -1,5 +1,6 @@
 import { institutionUpgradeCost } from "../config.js";
 import type { GameEvent, Institution, WorldState } from "../types.js";
+import { GOODS } from "../types.js";
 import { newId } from "../world.js";
 import { requestLoan } from "./bank.js";
 import { splitCost, tryConstruct } from "./construction.js";
@@ -19,7 +20,11 @@ export function payWages(state: WorldState): void {
     }
     // A state enterprise that cannot meet payroll and next week's inputs is bailed out by the treasury.
     const spec = state.config.institutions[inst.type];
-    const inputs = spec.powerPerLevel * inst.level * state.market.prices.power * 1.5;
+    let inputs = spec.powerPerLevel * inst.level * state.market.prices.power * 1.5;
+    if (inst.type === "market") {
+      // The state market needs working capital to stock what people need.
+      for (const g of GOODS) inputs += Math.max(state.market.lastDemand[g], state.market.lastWanted[g]) * state.market.prices[g];
+    }
     if (inst.balance < bill + inputs) {
       const shortfall = bill + inputs - inst.balance;
       state.treasury.balance -= shortfall;

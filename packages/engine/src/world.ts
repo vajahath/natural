@@ -51,6 +51,7 @@ export function newInstitution(state: WorldState, type: InstitutionType, plotId:
     loanIds: [],
     requestId: null,
     lastOutput: 0,
+    lastFactor: 1,
     lastRevenue: 0,
     lastWageBill: 0,
     missedWages: 0,
@@ -68,18 +69,60 @@ export function totalMoney(state: WorldState): number {
   return sum;
 }
 
-export function createWorld(seed = 1, overrides: Partial<Config> = {}): WorldState {
-  const config: Config = { ...defaultConfig, ...overrides };
-  const { width, height } = config.initial;
+export type Scenario = "starter" | "town";
+
+interface Layout {
+  width: number;
+  height: number;
+  resource: (x: number, y: number) => Plot["resource"];
+  road: (x: number, y: number) => boolean;
+  institutions: { type: InstitutionType; x: number; y: number; level: number; balance: number }[];
+  /** Plots handed to the initial owner families, in order. */
+  ownerPlots: { x: number; y: number }[];
+  initial: Partial<Config["initial"]>;
+  marketInventory: { food: number; wood: number };
+}
+
+const layouts: Record<Scenario, Layout> = {
+  // One family, one farm, one market, one short road. Everything else is the player's to build.
+  starter: {
+    width: 12,
+    height: 12,
+    resource: (x, y) => (x >= 1 && x <= 4 && y >= 1 && y <= 4 ? "farmland" : x >= 7 && x <= 10 && y >= 1 && y <= 4 ? "forest" : x >= 7 && x <= 10 && y >= 7 && y <= 10 ? "coal" : "none"),
+    road: (x, y) => y === 6 && x >= 2 && x <= 9,
+    institutions: [
+      { type: "farm", x: 3, y: 4, level: 1, balance: 400 },
+      { type: "market", x: 6, y: 6, level: 1, balance: 600 },
+    ],
+    ownerPlots: [],
+    initial: { width: 12, height: 12, families: 1, ownerFamilies: 0, treasury: 5000, bankBalance: 1000, marketBalance: 600, renterSavings: 60, landPrice: 200 },
+    marketInventory: { food: 30, wood: 80 },
+  },
+  town: {
+    width: 20,
+    height: 20,
+    resource: (x, y) => (x >= 2 && x <= 7 && y >= 2 && y <= 7 ? "farmland" : x >= 12 && x <= 18 && y >= 2 && y <= 8 ? "forest" : x >= 13 && x <= 18 && y >= 13 && y <= 18 ? "coal" : "none"),
+    road: (x, y) => y === 9 || (x === 9 && y >= 4 && y <= 15),
+    institutions: [
+      { type: "farm", x: 3, y: 3, level: 2, balance: 1500 },
+      { type: "logging", x: 14, y: 4, level: 1, balance: 800 },
+      { type: "coalPlant", x: 15, y: 15, level: 1, balance: 800 },
+      { type: "market", x: 9, y: 9, level: 2, balance: 4000 },
+    ],
+    ownerPlots: Array.from({ length: 15 }, (_, i) => ({ x: 4 + (i % 5), y: 11 + Math.floor(i / 5) })),
+    initial: {},
+    marketInventory: { food: 120, wood: 60 },
+  },
+};
+
+export function createWorld(seed = 1, overrides: Partial<Config> = {}, scenario: Scenario = "town"): WorldState {
+  const layout = layouts[scenario];
+  const config: Config = { ...defaultConfig, ...overrides, initial: { ...defaultConfig.initial, ...layout.initial, ...(overrides.initial ?? {}) } };
+  const { width, height } = layout;
   const plots: Plot[] = [];
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
-      let resource: Plot["resource"] = "none";
-      if (x >= 2 && x <= 7 && y >= 2 && y <= 7) resource = "farmland";
-      else if (x >= 12 && x <= 18 && y >= 2 && y <= 8) resource = "forest";
-      else if (x >= 13 && x <= 18 && y >= 13 && y <= 18) resource = "coal";
-      const road = x === 9 || x === 10 || y === 9 || y === 10;
-      plots.push({ id: y * width + x, x, y, resource, road, owner: null });
+      plots.push({ id: y * width + x, x, y, resource: layout.resource(x, y), road: layout.road(x, y), owner: null });
     }
   }
 
@@ -96,10 +139,12 @@ export function createWorld(seed = 1, overrides: Partial<Config> = {}): WorldSta
     market: {
       institutionId: -1,
       prices: { ...config.basePrices },
-      inventory: { food: 120, wood: 60, power: 0 },
+      inventory: { ...layout.marketInventory, power: 0 },
       demand: { food: 0, wood: 0, power: 0 },
-      lastDemand: { food: 100, wood: 20, power: 20 },
-      lastSupply: { food: 100, wood: 20, power: 20 },
+      wanted: { food: 0, wood: 0, power: 0 },
+      lastWanted: { food: 10, wood: 5, power: 5 },
+      lastDemand: { food: 10, wood: 5, power: 5 },
+      lastSupply: { food: 10, wood: 5, power: 5 },
       lastOffered: { food: 0, wood: 0, power: 0 },
       lastBought: { food: 0, wood: 0, power: 0 },
       lastSold: { food: 0, wood: 0, power: 0 },
@@ -119,26 +164,17 @@ export function createWorld(seed = 1, overrides: Partial<Config> = {}): WorldSta
     inflationTicks: 0,
   };
 
-  const place = (type: InstitutionType, x: number, y: number, level: number, balance: number) => {
-    const id = plotIndex(state, x, y);
-    const plot = state.plots[id]!;
-    plot.road = true;
-    const inst = newInstitution(state, type, id, level, balance);
+  for (const spec of layout.institutions) {
+    const id = plotIndex(state, spec.x, spec.y);
+    state.plots[id]!.road = true;
+    const inst = newInstitution(state, spec.type, id, spec.level, spec.balance);
     state.institutions[inst.id] = inst;
-    return inst;
-  };
-  place("farm", 3, 3, 2, 1500);
-  place("logging", 14, 4, 1, 800);
-  place("coalPlant", 15, 15, 1, 800);
-  const market = place("market", 9, 9, 2, config.initial.marketBalance);
-  state.market.institutionId = market.id;
+    if (spec.type === "market") state.market.institutionId = inst.id;
+  }
 
-  // Families: owners on plots south of the main road, renters in government housing.
-  const ownerPlots: number[] = [];
-  for (let y = 11; y <= 13; y++) for (let x = 4; x <= 8; x++) ownerPlots.push(plotIndex(state, x, y));
   for (let n = 0; n < config.initial.families; n++) {
-    const isOwner = n < config.initial.ownerFamilies;
-    const workerCount = 1 + (nextRandom(state) < 0.3 ? 1 : 0);
+    const isOwner = n < config.initial.ownerFamilies && n < layout.ownerPlots.length;
+    const workerCount = scenario === "starter" ? 2 : 1 + (nextRandom(state) < 0.3 ? 1 : 0);
     const workers: Worker[] = [];
     for (let w = 0; w < workerCount; w++) {
       const sector = INSTITUTION_TYPES[randomInt(state, INSTITUTION_TYPES.length)] ?? "farm";
@@ -146,7 +182,8 @@ export function createWorld(seed = 1, overrides: Partial<Config> = {}): WorldSta
     }
     const fam = newFamily(state, workers, isOwner ? config.initial.ownerSavings : config.initial.renterSavings, isOwner ? 2 : 1);
     if (isOwner) {
-      const pid = ownerPlots[n]!;
+      const { x, y } = layout.ownerPlots[n]!;
+      const pid = plotIndex(state, x, y);
       fam.plotIds.push(pid);
       state.plots[pid]!.owner = { kind: "family", id: fam.id };
     }
