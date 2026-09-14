@@ -21,13 +21,16 @@ export function familyMembers(f: Family): number {
   return 2 + f.workers.length;
 }
 
-/** Expected weekly after-tax income if every worker is paid. */
+/** Expected weekly after-tax income if every worker is paid (public jobs included). */
 export function expectedIncome(state: WorldState, f: Family): number {
   let gross = 0;
   for (const w of f.workers) {
-    if (w.jobId === null) continue;
+    if (w.jobId === null) {
+      gross += state.treasury.publicWage;
+      continue;
+    }
     const inst = state.institutions[w.jobId];
-    if (inst) gross += inst.wage;
+    gross += inst ? inst.wage : state.treasury.publicWage;
   }
   return gross * (1 - state.treasury.incomeTax);
 }
