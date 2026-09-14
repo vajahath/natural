@@ -54,11 +54,10 @@ describe("levels and land", () => {
     if (req.requester.kind === "family") s.families[req.requester.id]!.savings = req.money + 100;
     else s.institutions[req.requester.id]!.balance = req.money + 100;
     const plot = eligiblePlotsFor(s, req)[0]!;
-    const before = s.treasury.balance;
     const next = step(s, [{ type: "grantLand", requestId: req.id, plotId: plot.id }]).state;
     expect(next.landRequests.find((r) => r.id === req.id)).toBeUndefined();
     expect(next.plots[plot.id]!.owner).toEqual(req.requester);
-    expect(next.treasury.balance - before).toBeGreaterThan(req.money - 1);
+    expect(Math.abs(moneyInvariantGap(next))).toBeLessThan(1e-6);
   });
 });
 
