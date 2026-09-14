@@ -50,9 +50,13 @@ describe("levels and land", () => {
     s = run(s, 200);
     expect(s.landRequests.length).toBeGreaterThan(0);
     const req = s.landRequests[0]!;
-    // Make sure the requester can pay outright so the bank's decision does not matter here.
-    if (req.requester.kind === "family") s.families[req.requester.id]!.savings = req.money + 100;
-    else s.institutions[req.requester.id]!.balance = req.money + 100;
+    // Make sure the requester can pay outright so the bank's decision does not matter here
+    // (and count the injected money as seed so the invariant still holds).
+    const acct = req.requester.kind === "family" ? s.families[req.requester.id]! : s.institutions[req.requester.id]!;
+    const key = "savings" in acct ? "savings" : "balance";
+    const injected = req.money + 100 - (acct as unknown as Record<string, number>)[key]!;
+    (acct as unknown as Record<string, number>)[key] = req.money + 100;
+    s.seedMoney += injected;
     const plot = eligiblePlotsFor(s, req)[0]!;
     const next = step(s, [{ type: "grantLand", requestId: req.id, plotId: plot.id }]).state;
     expect(next.landRequests.find((r) => r.id === req.id)).toBeUndefined();
